@@ -1,0 +1,52 @@
+version: '3'
+services:
+  #PHP Service
+  php-fpm:
+    image: php:${PHP_V}-fpm
+    restart: unless-stopped
+    container_name: PHP_${DOCKER_NAME}
+    entrypoint: bash /scripts/init.sh
+    working_dir: /app
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    volumes:
+      - ${PROJECT_PATH}:/app
+      - ${DOCKER_PATH}/php/init.sh:/scripts/init.sh
+      - ${DOCKER_PATH}/php/conf.d/local.ini:/usr/local/etc/php/conf.d/local.ini
+    expose:
+      - ${PHP_PORT}
+    networks:
+      - app-network
+
+  ##Nginx Service
+  nginx_docusign:
+    image: nginx:alpine
+    restart: unless-stopped
+    container_name: webserver_${DOCKER_NAME}
+    hostname: server_${DOCKER_NAME}
+    working_dir: /app
+    tty: true
+    ports:
+      - ${DEBUG_PORT}:${SERVER_PORT}
+      - ${DEBUG_SPORT}:${SSL_PORT}
+    volumes:
+      - ${PROJECT_PATH}:/app
+      - ${DOCKER_PATH}/logs/:/var/log/nginx/
+      - ${DOCKER_PATH}/nginx/conf.d/:/etc/nginx/conf.d/
+    depends_on: 
+      - php-fpm
+    networks:
+      - app-network
+      - ${ENV_NETWORK}
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+  dev:
+    driver: bridge
+  prod:
+    external:
+      name: nginx-proxy
