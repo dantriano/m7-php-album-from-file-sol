@@ -1,69 +1,26 @@
 <?php
-define("MAX", 5);
-define("UPLOAD_FOLDER", "pictures/");
-define("PICTURES_LIST", "pictures/list.txt");
+include('Class/UploadClass.php');
+define("PICTURE_NAME", "picture");
+define("PICTURE_TITLE", "title");
+define('TITLE_ERROR', "Please write a title for the picture");
+
 
 class UploadError extends Exception
 {
 }
 // Check if the form was submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["picture"])) {
-    $file_uploaded = uploadPicture();
-    if ($file_uploaded) addPictureToFile($file_uploaded);
-    header("Location: index.php?upload=success");
-}
-function addPictureToFile($file_uploaded)
-{
-    try {
-        $title = $_POST["title"];
-        $fp = fopen(PICTURES_LIST, 'a'); //opens file in append mode  
-        fwrite($fp,  "\n" . $title . '###' . $file_uploaded);
-        fclose($fp);
-    } catch (Exception $e) {
-        header('Location: index.php?upload=error&msg=' . urlencode($e->getMessage()));
-        die();
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES[PICTURE_NAME])) {
+    //check if title is in the form
+    if (!isset($_POST[PICTURE_TITLE])) {
+        header('Location: index.php?upload=error&msg=' . urlencode(TITLE_ERROR));
+        return;
     }
-}
-function uploadPicture()
-{
-    try {
-        // Check if file was uploaded without errors
-        if ($_FILES["picture"]["error"] != 0)
-            throw new UploadError("Error: " . $_FILES["picture"]["error"]);
-
-        $allowed = array("jpg" => "image/jpg", "jpeg" => "image/jpeg", "gif" => "image/gif", "png" => "image/png");
-        $filename = $_FILES["picture"]["name"];
-        $filetype = $_FILES["picture"]["type"];
-        $filesize = $_FILES["picture"]["size"];
-
-        // Verify file extension
-        $ext = pathinfo($filename, PATHINFO_EXTENSION);
-        if (!array_key_exists($ext, $allowed))
-            throw new UploadError("Error: Please select a valid file format.");
-
-        // Verify file size - 5MB maximum
-        $maxsize = MAX * 1024 * 1024;
-        if ($filesize > $maxsize)
-            throw new UploadError("Error: File size is larger than the allowed limit.");
-
-        // Verify MYME type of the file
-        if (!in_array($filetype, $allowed))
-            throw new UploadError("Error: There was a problem uploading your file. Please try again.");
-
-        // Check whether file exists before uploading it
-        if (file_exists(UPLOAD_FOLDER . $filename))
-            throw new UploadError("Error: " . $filename . " is already exists.");
-
-        // IF NO errors, then move the picture to Folder
-        move_uploaded_file($_FILES["picture"]["tmp_name"], UPLOAD_FOLDER . $filename);
-        return UPLOAD_FOLDER . $filename;
-        //echo "Your file was uploaded successfully.";
-
-    } catch (UploadError $e) {
-        header('Location: index.php?upload=error&msg=' . urlencode($e->getMessage()));
-        die();
-    } catch (Exception $e) {
-        header('Location: index.php?upload=error&msg=' . urlencode($e->getMessage()));
-        die();
-    }
+    $upload = new Upload(PICTURE_NAME);
+    //If File is uploaded correcty, we added to our file
+    if ($upload->getFile() != null)
+        $upload->addPictureToFile();
+    // Any error redirect with error message
+    if ($upload->getError() != null)
+        header('Location: index.php?upload=error&msg=' . urlencode($upload->getError()));
+    else header("Location: index.php?upload=success");
 }
