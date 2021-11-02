@@ -3,6 +3,9 @@ define("MAX_SIZE", 5); //Max Mb
 define("UPLOAD_FOLDER", "pictures/");
 define("PICTURES_LIST", "pictures/list.txt");
 
+class UploadError extends Exception
+{
+}
 class Upload
 {
     private $fileName = null;

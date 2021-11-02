@@ -5,9 +5,6 @@ define("PICTURE_TITLE", "title");
 define('TITLE_ERROR', "Please write a title for the picture");
 
 
-class UploadError extends Exception
-{
-}
 // Check if the form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES[PICTURE_NAME])) {
     //check if title is in the form
