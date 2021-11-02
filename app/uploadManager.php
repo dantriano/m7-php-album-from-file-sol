@@ -11,7 +11,7 @@ class UploadError extends Exception
 // Check if the form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES[PICTURE_NAME])) {
     //check if title is in the form
-    if (!isset($_POST[PICTURE_TITLE])) {
+    if (empty($_POST[PICTURE_TITLE])) {
         header('Location: index.php?upload=error&msg=' . urlencode(TITLE_ERROR));
         return;
     }
